@@ -1,19 +1,16 @@
 # xNVSE Plugin Development Guide
 
 ## Overview
----
 New Vegas Script Extender is a powerful tool that extends Fallout: New Vegas's functionality, offering a wide variety of new script commands that allow mod authors to add many advanced features to their mods. For those who wish to expand the game's scripting capabilities or make edits to the game's code that go beyond what .esp and .esm files can do, xNVSE allows authors to create their own plugins using C++. This guide goes through the source code of the xNVSE example plugin, breaking down and explaining how plugins interface with xNVSE and how script commands are made.
 
 <br>
 
 ## Getting Support
----
 xNVSE has an active Discord server ([discord.gg/EebN93s](https://discord.gg/EebN93s)) with people who have experience developing plugins. [#plugin-development](https://discord.com/channels/711228477382328331/715866346763583569) is a channel that is dedicated to discussion and support surrounding the creation of xNVSE plugins. Before asking for help, you should first try to troubleshoot the problem on your own or look for an existing discussion surrounding the problem. Make good use of Google or the Discord/Github search feature to find information, and look through the source code of xNVSE or existing plugins to see how their authors implemented a feature or solved a problem. [JIP](https://github.com/jazzisparis/JIP-LN-NVSE), [JohnnyGuitar](https://github.com/carxt/JohnnyGuitarNVSE), and [ShowOff](https://github.com/Demorome/ShowOff-NVSE) are all open source plugins that utilize many features of xNVSE and may be helpful to look through.
 
 <br>
 
 ## Glossary
----
 
 | Term/Acronym | Expansion | Meaning
 |-|-|-|
@@ -27,7 +24,6 @@ Look through this [wiki article](https://geckwiki.com/index.php?title=Glossary) 
 <br>
 
 ## Skill Requirements
----
 This guide is solely dedicated to understanding how the example plugin works. More detail on certain concepts, such as installing mods or the basics of using Visual Studio, are not covered for the sake of brevity and because more thorough guides dedicated to learning those skills already exist.
 
 * An intermediate level of C++ understanding is recommended before attempting to develop a plugin. You should not attempt to learn C++ by making a plugin, as the xNVSE source code uses many features of the language that may be overwhelming to beginners that are trying to understand basic concepts. This tutorial assumes that you have adequate knowledge of C++ and will not be covering the basics of the language.
@@ -41,7 +37,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 <br>
 
 ## Software Requirements
----
 
 * A legitimate copy of Fallout: New Vegas from Steam or GOG, updated to the latest version. Copies of the game obtained from the Epic Games Store, Microsoft Store, or from any other sources are not supported by xNVSE. The German "No Gore" edition is not supported either. The GOG version is highly recommended, as the steam version will prevent debuggers from attaching themselves to the game process, making debugging much more difficult.
 
@@ -64,7 +59,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 <br>
 
 ## Creating a Development Environment
----
 
 1. Ensure you have a clean install of FNV outside of a default Windows folder with the latest version of xNVSE. If you have mods installed manually (any non vanilla files in the root or data folder) or aren't sure whether or not FNV is installed in a Windows folder, follow the [initial setup](https://vivanewvegas.moddinglinked.com/setup.html) of Viva New Vegas to get the game set up properly. Having New Vegas Heap Replacer (d3dx9_38.dll in the game's root folder) is fine and does not warrant a new install by itself.
 
@@ -140,7 +134,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 <br>
 
 ## Analyzing the Example Plugin By File
----
 
 <br>
 
@@ -152,8 +145,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 
 ### main.cpp
 - The main file where all of the code involved with loading the plugin and registering script commands is located.
-
-    <br>
 
     ### The Includes
     ---
