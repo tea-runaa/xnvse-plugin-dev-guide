@@ -92,8 +92,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 
 * [OneTweak](https://www.nexusmods.com/newvegas/mods/79211) - Allows the game to run in borderless window mode, which makes it easier to switch between the game and other programs (such as a debugger) while the game is running.
 
-* [Infinite Loading Screen Fix](https://www.nexusmods.com/newvegas/mods/70964) - Improves loading times and prevents deadlocks during loading.
-
 * [Mod Limit Fix](https://www.nexusmods.com/newvegas/mods/68714) - May further improve performance and loading times.
 
 * [Improved Console](https://www.nexusmods.com/newvegas/mods/70801) - Prints results from all script commands when used in the console, along with other improvements.
