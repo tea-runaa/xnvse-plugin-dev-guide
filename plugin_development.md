@@ -18,6 +18,8 @@ xNVSE has an active Discord server ([discord.gg/EebN93s](https://discord.gg/EebN
 | MO2 | Mod Organizer 2 |
 | VS | Visual Studio |
 | MSVC | Microsoft Visual C++ | The C++ compiler used by VS. |
+| Root Folder | | The folder that contains the game's executable (FalloutNV.exe). `(Your Steam Library Path)/steamapps/common/Fallout New Vegas` if you're using the steam version. |
+| Data Folder | | The folder that contains the game's data files. It's the folder named `Data` in the root folder.
 
 Look through this [wiki article](https://geckwiki.com/index.php?title=Glossary) for more technical terms used when making mods for FNV.
 
@@ -135,8 +137,6 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 
 ## Analyzing the Example Plugin By File
 
-<br>
-
 ### dllmain.c
 - This is a file made by VS for any DLL project which contains the DLL entry point. xNVSE does not normally use this entry point for loading plugins, so this file can be ignored.
 
@@ -147,8 +147,8 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
 - The main file where all of the code involved with loading the plugin and registering script commands is located.
 
     ### The Includes
-    ---
     The main file includes files that are necessary to interface with xNVSE and create/register commands. It also includes some files that contain script command examples that are separate from the main file to reduce its length.
+
     ```cpp
     #include "nvse/PluginAPI.h"
     #include "nvse/CommandTable.h"
@@ -157,10 +157,12 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
     #include "nvse/GameObjects.h"
     #include <string>
     ```
+
     ```cpp
     #include "fn_intro_to_script_functions.h" 
     #include "fn_typed_functions.h"
     ```
+
     | Include Path | Purpose |
     |-|-|
     | `"nvse/PluginAPI.h"` | Provides class definitions for some interfaces that xNVSE gives to plugins. Includes definitions for `NVSEInterface`, `PluginInfo`, `NVSEMessagingInterface`, and more, which are required for the plugin to properly interact with xNVSE. |
@@ -168,13 +170,19 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
     | `"nvse/GameAPI.h"` | Defines many general structures, functions, and addresses used by the game. |
     | `"nvse/ParamInfos.h"` | Defines command parameter information, which is used to determine what kind of arguments are to be passed to a command. |
     | `"nvse/GameObjects.h"` | Contains class definitions for game forms and refs. |
-    | `"fn_intro_to_script_functions.h" ` | A header specific to the example plugin that provides examples of script commands. |
+    | `"fn_intro_to_script_functions.h"` | A header specific to the example plugin that provides examples of script commands. |
     | `"fn_typed_functions.h"` | A header specific to the example plugin that provides more sophisticated examples of script commands that return certain values when called. |
 
     <br>
 
+    ### `#if RUNTIME` and `#if EDITOR`
+    xNVSE and the example plugin both have preprocessor directives in certain places that check if `RUNTIME` or `EDITOR` macros are defined. By default, the plugin compiles in runtime mode where the `RUNTIME` macro is defined, but `EDITOR` isn't. You can compile it under editor mode for the opposite effect by switching the build configuration to one that ends in GECK. The plugin can still load and have script commands registered in the GECK when compiled in a runtime configuration, so don't change to a GECK configuration unless you're explicitly planning to make changes to the editor.
+
+    <br>
+
     ### Global Variables
-    ---
+    Pointers to some interfaces that you may need have been defined in the main file. Keep in mind that, due to the way the project is set up, these variables are in scope for the `"fn_intro_to_script_functions.h"` and `"fn_typed_functions.h"` headers.
+
     ```cpp
     IDebugLog		gLog("nvse_plugin_example.log");
     PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
@@ -194,5 +202,189 @@ This guide is solely dedicated to understanding how the example plugin works. Mo
     bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...);
     #endif
     ```
+    | Type | Name | Purpose | Type Declaration Header |
+    |-|-|-|-|
+    | `IDebugLog` | gLog | Creates an instance of xNVSE's logger. It can be interfaced through functions like `_MESSAGE` or `_ERROR`. The full list can be found in `./common/IDebugLog.h` | `./common/IDebugLog.h` (included through `./common/IPrefix.h`, which itself is automatically included in all example plugin .cpp files due to the `Forced Include File` project setting in VS) |
+    | `PluginHandle` | g_pluginHandle | A unique ID for your plugin obtained from the xNVSE interface. The plugin handle cannot be retrieved until the load function, so it's initialized as an invalid handle for now. | `./nvse/PluginAPI.h` |
+    | `NVSEMessagingInterface*` | g_messagingInterface | A pointer the messaging interface class, used to create messages and manage message handlers for communication between plugins. | `./nvse/PluginAPI.h` |
+    | `NVSEInterface*` | g_nvseInterface | The NVSE interface  is used for a variety of purposes, such as getting the current game/NVSE version, getting pointers to interfaces, and registering script commands. | `./nvse/PluginAPI.h` |
+    | `NVSECommandTableInterface*` | g_cmdTableInterface | The command table interface is used for iterating through and searching for commands and obtaining data on them. Unused in the example plugin (TODO: double check cause I'm not actually sure). | `./nvse/PluginAPI.h` |
+    | `NVSEScriptInterface*` | g_script | The script interface can be used to create obscript scripts/expressions dynamically, and can be used to call or get information on [UDF](https://geckwiki.com/index.php/User_Defined_Function)s. | `./nvse/PluginAPI.h` |
+    | `NVSEStringVarInterface*` | g_stringInterface | The string interface is used to manipulate [String Variables](https://geckwiki.com/index.php?title=String_Variable) that NVSE introduced to Obscript. | `./nvse/PluginAPI.h` |
+    | `NVSEArrayVarInterface*` | g_arrayInterface | The array interface is used to manipulate [Array Variables](https://geckwiki.com/index.php?title=Array_Variable) that NVSE introduced to Obscript. | `./nvse/PluginAPI.h` |
+    | `NVSEDataInterface*` | g_dataInterface | The data interface gives you access to some NVSE singletons and functions at runtime, such as `ArrayVarMap` and `StringVarMap`, which manage all array and string variables respectively. | `./nvse/PluginAPI.h` |
+    | `NVSESerializationInterface*` | g_serializationInterface | The serialization interface allows you to read/write data from NVSE cosaves, which are files made alongside normal game saves, allowing you to store persistent data related to your plugin. | `./nvse/PluginAPI.h` |
+    | `NVSEConsoleInterface*` | g_consoleInterface | The console interface allows you to run console commands through your plugin. | `./nvse/PluginAPI.h` |
+    | `NVSEEventManagerInterface*` | g_eventInterface | The event interface is used for managing [script events](https://geckwiki.com/index.php?title=NVSE_Event_Handling), calling Obscript UDFs and/or C++ code from a plugin when they're dispatched. | `./nvse/PluginAPI.h` |
+    | `bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...)` | ExtractArgsEx | A pointer to a function that is retrieved at runtime. This is usually called in script command functions to obtain arguments for the command from the script calling it. | None. The function itself is declared in `nvse/GameAPI.h`. |
+
+    <br>
+
+    ### Plugin Query Function
+    `NVSEPlugin_Query` is a function called right after the plugin .dll is loaded, used for version checks and giving xNVSE data on the plugin (by filling out a `PluginInfo` struct). This function is exported when building the .dll so that xNVSE can find and call it at runtime just by using its name. The query function should usually only be used for version checks and filling out `PluginInfo`, as most of the data related to the game and other plugins hasn't been loaded in yet.
+
+    ```cpp
+    bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
+    ```
+    `NVSEPlugin_Query` must have this definition (returns a `bool`, takes pointers to `NVSEInterface` and `PluginInfo` data structures. xNVSE will call this function and supply the arguments). If the function returns `true`, xNVSE will call `NVSEPlugin_Load` later on, after all other NVSE functions have been queried. The `NVSEInterface` pointer should not be stored yet, and should only be used to obtain version numbers and similar data (`isNoGore`, `isEditor`).
+
+    ```cpp
+    _MESSAGE("query");
+    ```
+    An example of one of the logging functions being used, which will result in the word "query" being logged to `nvse_plugin_example.log` in the game's root folder. (TODO: Might make a section on logging stuff, so I'll have to update this to forward people to it if I do)
+
+    ```cpp
+	info->infoVersion = PluginInfo::kInfoVersion;
+	info->name = "MyFirstPlugin";
+	info->version = 2;
+    ```
+    Here, xNVSE sends a pointer to a structure that has to be filled with data on the plugin. `name` and `version` can be replaced with any desired value, but `infoVersion` should be left alone.
+
+    ```cpp
+	if (nvse->nvseVersion < PACKED_NVSE_VERSION)
+	{
+		_ERROR("NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, PACKED_NVSE_VERSION);
+		return false;
+	}
+    ```
+    This version check makes sure that the current version of xNVSE being used meets or exceeds the minimum version required for the plugin. If it does not, it will return `false`, which will stop xNVSE from running the load function, and will unload your plugin (TODO: check if it does cause I'm not actually sure). To change the minimum version required, `NVSE_VERSION_INTEGER`, `NVSE_VERSION_INTEGER_MINOR`, `NVSE_VERSION_INTEGER_BETA`, and `NVSE_VERSION_VERSTRING` in `nvse/nvse_version.h` (included automatically in the example plugin through `common/IPrefix.h`). It's recommended to leave these values alone and inform the user that they have to have the latest xNVSE version as of when your plugin is released.
+
+    ```cpp
+    if (!nvse->isEditor)
+	{
+		if (nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525)
+		{
+			_ERROR("incorrect runtime version (got %08X need at least %08X)", nvse->runtimeVersion, RUNTIME_VERSION_1_4_0_525);
+			return false;
+		}
+
+		if (nvse->isNogore)
+		{
+			_ERROR("NoGore is not supported");
+			return false;
+		}
+	}
+    ```
+    This next branch is taken when the game is launched with xNVSE. First, it checks to make sure that the game's executable version matches the latest version supported by xNVSE. The next check looks at if the NoGore German version of FNV is being used. xNVSE itself will load if a NoGore copy is used (TODO: check this as well), but it's easier if your plugin fails the check if NoGore is detected. This is because there are some changes in the .exe that might not make things work as intended, so unless you're willing to test if the NoGore version works with your plugin and make possible adjustments if it doesn't, it's easier to leave it unsupported.
+
+    ```cpp
+	else
+	{
+		if (nvse->editorVersion < CS_VERSION_1_4_0_518)
+		{
+			_ERROR("incorrect editor version (got %08X need at least %08X)", nvse->editorVersion, CS_VERSION_1_4_0_518);
+			return false;
+		}
+	}
+    ```
+    This alternate branch is taken when the GECK is launched with xNVSE. It's similar to the runtime version check above, but checks the GECK executable and uses a different version value.
+
+    ```cpp
+    return true;
+    ```
+    If the query function reaches this point and returns `true`, the query is considered successful and `NVSEPlugin_Load` will be called later on.
+
+    <br>
+
+    ### Plugin Load Function
+    If the plugin query is successful, xNVSE will call `xNVSEPlugin_Load` after all other plugins have been queried. The data you have access to here is still somewhat limited as the game's data hasn't fully loaded in yet, but registering script commands can be done at this point.
+
+    ```cpp
+    bool NVSEPlugin_Load(NVSEInterface* nvse)
+    ```
+    Like the `NVSEPlugin_Query`, `NVSEPlugin_Load` must have this definition (returns a `bool`, takes pointers to the `NVSEInterface` structure). This function is also exported when building the .dll. If `false` is returned, the load will be considered a failure and your plugin will be unloaded. This does not revert any changes to the game's data that may have been made earlier in the load function, so make sure you return `false` before registering script commands (TODO: maybe with script commands it might unregister them or do a bit of cleanup idk. Check just in case) or making changes to the game's code.
+
+    ```cpp
+    g_pluginHandle = nvse->GetPluginHandle();
+    ```
+    The query and load functions are the only time that a valid handle for your plugin can be returned from `GetPluginHandle`, so call this function now and save the value in case it's needed later. The value may not be valid if called twice or from outside of these functions.
+
+    ```cpp
+    g_nvseInterface = nvse;
+    ```
+    The pointer to the NVSE interface can and should now be saved for later use.
+
+    ```cpp
+    g_messagingInterface = static_cast<NVSEMessagingInterface*>(nvse->QueryInterface(kInterface_Messaging));
+	g_messagingInterface->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
+    ```
+    The first line of this code retrieves a pointer to the `NVSEMessagingInterface` structure. It does this by calling the `QueryInterface` function from `NVSEInterface`, which takes an enum prefixed with `kInterface` (found in `nvse/PluginAPI.h`) and returns the corresponding interface. `QueryInterface` returns a `void*` to the interface, so it must be cast to the appropriate interface pointer. The second line registers the function `MessageHandler`, which was defined earlier, and sets it to listen to messages that xNVSE itself sends out (see the "Message Handling" section below for more information).
+
+    ```cpp
+	if (!nvse->isEditor)
+	{
+    #if RUNTIME
+		g_script = static_cast<NVSEScriptInterface*>(nvse->QueryInterface(kInterface_Script));
+		g_stringInterface = static_cast<NVSEStringVarInterface*>(nvse->QueryInterface(kInterface_StringVar));
+		g_arrayInterface = static_cast<NVSEArrayVarInterface*>(nvse->QueryInterface(kInterface_ArrayVar));
+		g_dataInterface = static_cast<NVSEDataInterface*>(nvse->QueryInterface(kInterface_Data));
+		g_eventInterface = static_cast<NVSEEventManagerInterface*>(nvse->QueryInterface(kInterface_EventManager));
+		g_serializationInterface = static_cast<NVSESerializationInterface*>(nvse->QueryInterface(kInterface_Serialization));
+		g_consoleInterface = static_cast<NVSEConsoleInterface*>(nvse->QueryInterface(kInterface_Console));
+		ExtractArgsEx = g_script->ExtractArgsEx;
+    #endif
+	}
+    ```
+    Initializes all runtime specific global variables defined earlier by querying their interfaces, as seen with the messaging interface.
+
+    ```cpp
+	UInt32 const examplePluginOpcodeBase = 0x2000;
+	nvse->SetOpcodeBase(examplePluginOpcodeBase);
+
+	RegisterScriptCommand(ExamplePlugin_PluginTest);
+	REG_CMD(ExamplePlugin_CrashScript);
+	REG_CMD(ExamplePlugin_IsNPCFemale);
+	REG_CMD(ExamplePlugin_FunctionWithAnAlias);
+	REG_TYPED_CMD(ExamplePlugin_ReturnForm, Form);
+	REG_TYPED_CMD(ExamplePlugin_ReturnString, String);
+	REG_TYPED_CMD(ExamplePlugin_ReturnArray, Array);
+    ```
+    Sets a base for the opcode range that your script commands will be registered under and then registers said commands. See the "Registering Commands" section below for more detail.
+
+    <br>
+
+    ### Message Handling
+    xNVSE features a system that allows it to notify plugins whenever certain game events happen, like if a user is saving or quitting the game.
+    
+    ```cpp
+    void MessageHandler(NVSEMessagingInterface::Message* msg)
+    ```
+    In order for your plugin to receive messages, a message handler is needed. A message handler function returns nothing and takes a pointer to an xNVSE message. xNVSE will call this function with a pointer to a `Message` structure containing information about an event whenever certain game events occur.
+
+    ```cpp
+	switch (msg->type)
+	{
+	case NVSEMessagingInterface::kMessage_PostLoad: break;
+	case NVSEMessagingInterface::kMessage_ExitGame: break;
+	case NVSEMessagingInterface::kMessage_ExitToMainMenu: break;
+	case NVSEMessagingInterface::kMessage_LoadGame: break;
+	case NVSEMessagingInterface::kMessage_SaveGame: break;
+    #if EDITOR
+	case NVSEMessagingInterface::kMessage_ScriptEditorPrecompile: break;
+    #endif
+	case NVSEMessagingInterface::kMessage_PreLoadGame: break;
+	case NVSEMessagingInterface::kMessage_ExitGame_Console: break;
+	case NVSEMessagingInterface::kMessage_PostLoadGame: break;
+	case NVSEMessagingInterface::kMessage_PostPostLoad: break;
+	case NVSEMessagingInterface::kMessage_RuntimeScriptError: break;
+	case NVSEMessagingInterface::kMessage_DeleteGame: break;
+	case NVSEMessagingInterface::kMessage_RenameGame: break;
+	case NVSEMessagingInterface::kMessage_RenameNewGame: break;
+	case NVSEMessagingInterface::kMessage_NewGame: break;
+	case NVSEMessagingInterface::kMessage_DeleteGameName: break;
+	case NVSEMessagingInterface::kMessage_RenameGameName: break;
+	case NVSEMessagingInterface::kMessage_RenameNewGameName: break;
+	case NVSEMessagingInterface::kMessage_DeferredInit: break;
+	case NVSEMessagingInterface::kMessage_ClearScriptDataCache: break;
+	case NVSEMessagingInterface::kMessage_MainGameLoop: break;
+	case NVSEMessagingInterface::kMessage_ScriptCompile: break;
+	case NVSEMessagingInterface::kMessage_EventListDestroyed: break;
+	case NVSEMessagingInterface::kMessage_PostQueryPlugins: break;
+	default: break;
+	}
+    ```
+    The `Message` struct has a `type` field, which changes based on what kind of message that xNVSE sends out. A switch statement is used in the example plugin to handle all of the different types of messages that xNVSE can send. Obviously, not all cases must be handled and unused ones can be removed from the switch statement. The different values of `type` are enums starting with `kMessage` that can be found under the `NVSEMessagingInterface` class.
+
+    <br>
 
 <br>
